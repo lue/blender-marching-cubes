@@ -47,6 +47,7 @@ import mathutils
 import bpy
 from itertools import chain
 import bmesh
+import numpy as np
 
 vec=mathutils.Vector
 ABS=abs
@@ -57,18 +58,12 @@ def main():
 #change this part to create your own surfaces
 #####################################################    
     # define a 3D scalarfield (the function which defines the shape of the isosurface)
+    n1,n2,n3,data = readifrit('../ifrit-box-a=0.1230.bin', nvar=[0])
     def scalarfield(pos):
-        x,y,z=pos[0],pos[1],pos[2]
-        m=2 #distance between spheres
-        a= 1.0/(1+(x-m)*(x-m)+y*y+z*z)
-        b= 1.0/(1+(x+m)*(x+m)+y*y+z*z)
-        c= 0.5*(sin(6*x)+sin(6*z))
-        csq=c**10
-        return (a+b)-csq
-
-    p0=-5,-5,-5             #first point defining the gridbox of the MC-algorithm
-    p1=5,5,5                #second point defining the gridbox of the MC-algorithm
-    res=200
+        return data[int(pos[0]), int(pos[1]), int(pos[2]), 0] 
+    p0=0,0,0             #first point defining the gridbox of the MC-algorithm
+    p1=127,127,127               #second point defining the gridbox of the MC-algorithm
+    res=127
     resolution=(res,res,res)   #resolution in x,y,z direction of the grid (10x10x10 means 1000 cubes)
     isolevel=0.3         #threshold value used for the surface within the scalarfield
 
@@ -79,10 +74,31 @@ def main():
     isosurface(p0,p1,resolution,isolevel,scalarfield)
     elapsed = time.time()-start
     print("end test %r"%elapsed)
+    bpy.ops.wm.save_as_mainfile(filepath="temp.blend")
 
 #
 #
 #
+
+def readifrit(path, nvar=[0], moden=2, skipmoden=2):
+    import struct
+    import numpy as np
+    openfile=open(path, "rb")
+    dump = np.fromfile(openfile, dtype='i', count=moden)
+    N1,N2,N3=np.fromfile(openfile, dtype='i', count=3)
+    dump = np.fromfile(openfile, dtype='i', count=moden)
+    data=np.zeros([N1,N2,N3,np.size(nvar)])
+    j=0
+    for i in range(np.max(nvar)+1):
+        dump = np.fromfile(openfile, dtype='i', count=moden)
+        if i==nvar[j]:
+            data[:,:,:,j]=np.reshape(np.fromfile(openfile, dtype='f4', count=N1*N2*N3),[N1,N2,N3])
+            j=j+1
+        else:
+            dump=np.fromfile(openfile, dtype='f4', count=N1*N2*N3)
+        dump = np.fromfile(openfile, dtype='i', count=moden)
+    openfile.close()
+    return N1,N2,N3,data
 
 
 edgetable=(0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
