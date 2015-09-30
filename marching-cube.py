@@ -62,8 +62,8 @@ def main():
     def scalarfield(pos):
         return data[int(pos[0]), int(pos[1]), int(pos[2]), 0] 
     p0=0,0,0             #first point defining the gridbox of the MC-algorithm
-    p1=127,127,127               #second point defining the gridbox of the MC-algorithm
-    res=127
+    p1=255,255,255               #second point defining the gridbox of the MC-algorithm
+    res=256
     resolution=(res,res,res)   #resolution in x,y,z direction of the grid (10x10x10 means 1000 cubes)
     isolevel=0.3         #threshold value used for the surface within the scalarfield
 
